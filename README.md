@@ -13,12 +13,7 @@ Obstacle Avoidance is a system designed to help individuals or machines proactiv
 2. **Alert System**
    - Triggers appropriate alerts to warn users or initiate corrective actions.
    - Alerts can include:
-     - Visual cues (e.g., lights, displays)
      - Auditory signals (e.g., beeps, alarms)
-     - Haptic feedback (e.g., vibrations)
-
-3. **Data Logging**
-   - Logs sensor data and obstacle detection events for analysis and system improvement.
 
 ### How It Works
 1. **Sensor Data Acquisition**
@@ -30,8 +25,8 @@ Obstacle Avoidance is a system designed to help individuals or machines proactiv
 3. **Alert Triggering**
    - Based on the detected obstacles and system settings, appropriate alerts are triggered.
 
-4. **User Response**
-   - Users respond to the alerts by taking corrective actions, such as steering, braking, or adjusting their course.
+4. **Robot Response**
+   - Robot respond to the alerts by taking corrective actions, such as adjusting its path.
 
 ### Applications
 1. **Autonomous Vehicles**
