@@ -1,7 +1,7 @@
 # Obstacle Avoider Robot
 
 ## Project Overview
-This project aims to build a simple robot capable of navigating a defined environment while avoiding obstacles. The robot is equipped with specialized sensors that detect any obstructions in its path. Upon detecting an obstacle, the robot emits an audible alert to warn users or initiate corrective actions.
+This project aims to build a simple robot capable of navigating a defined environment while avoiding obstacles. The robot is equipped with specialized sensors that detect any obstructions in its path. Upon detecting an obstacle, the robot emits an audible alert to warn users and initiate corrective actions.
 
 ## System Overview: Obstacle Avoidance
 Obstacle Avoidance is a system designed to help individuals or machines proactively avoid obstacles in their path. It utilizes sensors to detect potential obstacles and triggers alerts to guide users or initiate corrective actions.
@@ -13,7 +13,10 @@ Obstacle Avoidance is a system designed to help individuals or machines proactiv
 2. **Alert System**
    - Triggers appropriate alerts to warn users or initiate corrective actions.
    - Alerts can include:
-     - Auditory signals (e.g., beeps, alarms)
+     - Auditory signals (e.g., alarms)
+    
+3. **change path**
+   - After detecting the obstacle, the robot will switch to another safe path.
 
 ### How It Works
 1. **Sensor Data Acquisition**
@@ -38,10 +41,8 @@ Obstacle Avoidance is a system designed to help individuals or machines proactiv
 3. **Assistive Technologies**
    - Helps visually impaired individuals navigate obstacles.
 
-4. **Home Automation**
-   - Prevents collisions with furniture or other obstacles within the home.
+## OverAll
+We provided our overall system needs, including both hardware and software, along with a detailed document outlining the system.
 
-## Conclusion
-The **Obstacle Avoider** system aims to enhance safety and efficiency by proactively detecting and avoiding obstacles, minimizing the risk of accidents, and improving overall performance. This project demonstrates the use of sensor technology and intelligent alerts to create a safer and more efficient environment for various applications.
 
 
