@@ -1,156 +1,128 @@
-#include <NewPing.h>      // Ultrasonic sensor library
-#include <Servo.h>        // Servo motor library
+#include <Servo.h> 
 
-const int leftMotorForwardPin = 6;
-const int leftMotorBackwardPin = 7;
-const int rightMotorForwardPin = 8;
-const int rightMotorBackwardPin = 9;
+Servo Myservo;
 
-// Sensor pins
-#define trigPin A1
-#define echoPin A2
+#define trigPin 9           // Trig Pin Of HC-SR04
+#define echoPin 8           // Echo Pin Of HC-SR04
+#define MLa 4               // left motor 1st pin
+#define MLb 5               // left motor 2nd pin
+#define MRa 6               // right motor 1st pin
+#define MRb 7               // right motor 2nd pin
 
-#define maxDistance 200
-boolean movingForward = false;
-int currentDistance = 100;
-
-NewPing sonar(trigPin, echoPin, maxDistance); // Sensor instance
-Servo myServo; // Servo motor instance
+long duration, distance;
 
 void setup() {
-  pinMode(rightMotorForwardPin, OUTPUT);
-  pinMode(leftMotorForwardPin, OUTPUT);
-  pinMode(leftMotorBackwardPin, OUTPUT);
-  pinMode(rightMotorBackwardPin, OUTPUT);
-
-  myServo.attach(10); // Attach the servo to pin 10
-
-  myServo.write(115);
-  delay(2000);
-  currentDistance = getDistance();
-  delay(100);
-  currentDistance = getDistance();
-  delay(100);
-  currentDistance = getDistance();
-  delay(100);
-  currentDistance = getDistance();
-  delay(100);
+  Serial.begin(9600);
+  pinMode(MLa, OUTPUT);     // Set Motor Pins As O/P
+  pinMode(MLb, OUTPUT);
+  pinMode(MRa, OUTPUT);
+  pinMode(MRb, OUTPUT);
+  pinMode(trigPin, OUTPUT); // Set Trig Pin As O/P To Transmit Waves
+  pinMode(echoPin, INPUT);  // Set Echo Pin As I/P To Receive Reflected Waves
+  Myservo.attach(10);
 }
 
 void loop() {
-  int rightDist = 0;
-  int leftDist = 0;
-  delay(50);
+  // Read distance in front
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);   
+  digitalWrite(trigPin, HIGH);       // Transmit Waves For 10us
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);  // Stops the trigPin
 
-  if (currentDistance <= 20) {
-    stopMovement();
-    delay(300);
-    reverse();
-    delay(400);
-    stopMovement();
-    delay(300);
-    rightDist = scanRight();
-    delay(300);
-    leftDist = scanLeft();
-    delay(300);
+  duration = pulseIn(echoPin, HIGH); // Receive Reflected Waves
+  distance = duration * 0.034 / 2;   // Get Distance
 
-    if (currentDistance >= leftDist) {
-      turnToRight();
-      stopMovement();
-    } else {
-      turnToLeft();
-      stopMovement();
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+
+  if (distance > 15) {               // Condition For Absence Of Obstacle            
+    Myservo.write(90);               // Rotate Servo to 90 degrees
+    digitalWrite(MRb, HIGH);         // Move Forward
+    digitalWrite(MRa, LOW);
+    digitalWrite(MLb, HIGH);                                
+    digitalWrite(MLa, LOW);                                                       
+  } else if (distance <= 15 && distance > 0) {  // Condition For Presence Of Obstacle
+    digitalWrite(MRb, LOW);        // Stop                
+    digitalWrite(MRa, LOW);
+    digitalWrite(MLb, LOW);                                
+    digitalWrite(MLa, LOW);
+    delay(100);
+
+    // Scanning all directions
+    int foundPath = 0; 
+    for (int angle = 0; angle <= 180; angle += 45) { // Scan Left, Right, and Center
+      Myservo.write(angle);        
+      delay(500);
+      digitalWrite(trigPin, LOW);
+      delayMicroseconds(2);   
+      digitalWrite(trigPin, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(trigPin, LOW);
+      duration = pulseIn(echoPin, HIGH); 
+      distance = duration * 0.034 / 2;   
+      if (distance > 15) {
+        foundPath = angle;
+        break;
+      }
     }
-  } else {
-    moveForward();
+
+    // Move to the detected direction if found
+    if (foundPath == 0) {             // Move straight forward
+      digitalWrite(MRb, HIGH);
+      digitalWrite(MRa, LOW);
+      digitalWrite(MLb, HIGH);                                
+      digitalWrite(MLa, LOW); 
+    } else if (foundPath == 45) {     // Move slightly right
+      digitalWrite(MRb, HIGH);
+      digitalWrite(MRa, LOW);
+      digitalWrite(MLb, LOW);                                
+      digitalWrite(MLa, LOW); 
+    } else if (foundPath == 135) {    // Move slightly left
+      digitalWrite(MRb, LOW);
+      digitalWrite(MRa, LOW);
+      digitalWrite(MLb, HIGH);                                
+      digitalWrite(MLa, LOW); 
+    } else if (foundPath == 90) {     // Move forward
+      digitalWrite(MRb, HIGH);
+      digitalWrite(MRa, LOW);
+      digitalWrite(MLb, HIGH);                                
+      digitalWrite(MLa, LOW); 
+    } else {
+      // No path found, move backward and re-scan
+      digitalWrite(MRb, LOW);        // Move Backward             
+      digitalWrite(MRa, HIGH);
+      digitalWrite(MLb, LOW);                                
+      digitalWrite(MLa, HIGH);
+      delay(500);
+      digitalWrite(MRb, LOW);        // Stop                
+      digitalWrite(MRa, LOW);
+      digitalWrite(MLb, LOW);                                
+      digitalWrite(MLa, LOW);
+      delay(100);  
+
+      for (int angle = 0; angle <= 180; angle += 45) { // Re-scan after moving backward
+        Myservo.write(angle);        
+        delay(500);
+        digitalWrite(trigPin, LOW);
+        delayMicroseconds(2);   
+        digitalWrite(trigPin, HIGH);
+        delayMicroseconds(10);
+        digitalWrite(trigPin, LOW);
+        duration = pulseIn(echoPin, HIGH); 
+        distance = duration * 0.034 / 2;   
+        if (distance > 15) {
+          break;
+        }
+      }
+
+      digitalWrite(MRb, HIGH); // Move Forward to the detected direction
+      digitalWrite(MRa, LOW);
+      digitalWrite(MLb, HIGH);                                
+      digitalWrite(MLa, LOW); 
+    }
   }
-  currentDistance = getDistance();
-}
 
-int scanRight() {
-  myServo.write(50);  // Turn servo to the right
-  delay(500);
-  int distance = getDistance();
-  delay(100);
-  myServo.write(115); // Reset servo position
-  return distance;
-}
-
-int scanLeft() {
-  myServo.write(170); // Turn servo to the left
-  delay(500);
-  int distance = getDistance();
-  delay(100);
-  myServo.write(115); // Reset servo position
-  return distance;
-}
-
-int getDistance() {
-  delay(70);
-  int cm = sonar.ping_cm();
-  if (cm == 0) {
-    cm = 250;
-  }
-  return cm;
-}
-
-void stopMovement() {
-  digitalWrite(rightMotorForwardPin, LOW);
-  digitalWrite(leftMotorForwardPin, LOW);
-  digitalWrite(rightMotorBackwardPin, LOW);
-  digitalWrite(leftMotorBackwardPin, LOW);
-}
-
-void moveForward() {
-  if (!movingForward) {
-    movingForward = true;
-
-    digitalWrite(leftMotorForwardPin, HIGH);
-    digitalWrite(rightMotorForwardPin, HIGH);
-
-    digitalWrite(leftMotorBackwardPin, LOW);
-    digitalWrite(rightMotorBackwardPin, LOW);
-  }
-}
-
-void reverse() {
-  movingForward = false;
-
-  digitalWrite(leftMotorBackwardPin, HIGH);
-  digitalWrite(rightMotorBackwardPin, HIGH);
-
-  digitalWrite(leftMotorForwardPin, LOW);
-  digitalWrite(rightMotorForwardPin, LOW);
-}
-
-void turnToRight() {
-  digitalWrite(leftMotorForwardPin, HIGH);
-  digitalWrite(rightMotorBackwardPin, HIGH);
-
-  digitalWrite(leftMotorBackwardPin, LOW);
-  digitalWrite(rightMotorForwardPin, LOW);
-
-  delay(500);
-
-  digitalWrite(leftMotorForwardPin, HIGH);
-  digitalWrite(rightMotorForwardPin, HIGH);
-
-  digitalWrite(leftMotorBackwardPin, LOW);
-  digitalWrite(rightMotorBackwardPin, LOW);
-}
-
-void turnToLeft() {
-  digitalWrite(leftMotorBackwardPin, HIGH);
-  digitalWrite(rightMotorForwardPin, HIGH);
-
-  digitalWrite(leftMotorForwardPin, LOW);
-  digitalWrite(rightMotorBackwardPin, LOW);
-
-  delay(500);
-
-  digitalWrite(leftMotorForwardPin, HIGH);
-  digitalWrite(rightMotorForwardPin, HIGH);
-
-  digitalWrite(leftMotorBackwardPin, LOW);
-  digitalWrite(rightMotorBackwardPin, LOW);
+  delay(500); // الانتظار لمدة 0.5 ثانية قبل التكرار التالي
 }
